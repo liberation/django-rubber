@@ -43,7 +43,7 @@ class Token(ESIndexableMixin, models.Model):
         return {
             'properties': {
                 'name': {
-                    'type': 'string'
+                    'type': 'text'
                 }
             }
         }

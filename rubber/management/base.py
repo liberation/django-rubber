@@ -16,25 +16,8 @@ from rubber import get_rubber_config
 class ESBaseCommand(BaseCommand):
     required_options = []
 
-    options = {
-        'index': make_option(
-            '--index',
-            '-i',
-            dest='index',
-            default=None,
-            help="Name of the index."
-        ),
-        'target': make_option(
-            '--target',
-            '-t',
-            dest='target',
-            default=None,
-            help="Name of the target index."
-        ),
-    }
-
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument(
             '--dry-run',
             action='store_true',
             dest='dry_run',
@@ -43,15 +26,14 @@ class ESBaseCommand(BaseCommand):
                 "Run the command in dry run mode without actually changing "
                 "anything."
             )
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--yes',
             action='store_true',
             dest='yes',
             default=False,
             help="Bypass the command line's verification."
-        ),
-    )
+        )
 
     def handle(self, *args, **options):
         self.rubber_config = get_rubber_config()
@@ -67,7 +49,7 @@ class ESBaseCommand(BaseCommand):
     def parse_options(self, **options):
         for required_option in self.required_options:
             if options.get(required_option) is None:
-                self.print_error(u"{0} is required (use -h for help).".format(
+                self.print_error("{0} is required (use -h for help).".format(
                     required_option))
                 sys.exit(1)
 
