@@ -1,0 +1,12 @@
+.installed.cfg
+*.pyc
+*~
+bin/
+cover/
+develop-eggs/
+dist/
+django_rubber.egg-info/
+eggs/
+logs/
+parts/
+ve/
