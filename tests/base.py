@@ -17,13 +17,12 @@ class BaseTestCase(TransactionTestCase):
     def refresh(self):
         rubber_config.es.indices.refresh('_all')
 
-    def docExists(self, obj, token_id=None):
+    def docExists(self, obj, index, doc_id=None):
         doc_type = obj.get_es_doc_type()
-        index = obj.get_es_index()
         return rubber_config.es.exists(
             index=index,
             doc_type=doc_type,
-            id=token_id or obj.pk
+            id=doc_id or obj.pk
         )
 
     def aliasExists(self, index, name):
@@ -57,11 +56,11 @@ class BaseTestCase(TransactionTestCase):
     def assertTypeDoesntExist(self, index, doc_type):
         self.assertFalse(self.typeExists(index, doc_type))
 
-    def assertDocExists(self, obj, token_id=None):
-        self.assertTrue(self.docExists(obj, token_id))
+    def assertDocExists(self, obj, index, doc_id=None):
+        self.assertTrue(self.docExists(obj, index, doc_id))
 
-    def assertDocDoesntExist(self, obj, token_id=None):
-        self.assertFalse(self.docExists(obj, token_id))
+    def assertDocDoesntExist(self, obj, index, doc_id=None):
+        self.assertFalse(self.docExists(obj, index, doc_id))
 
     def createIndex(self, index):
         rubber_config.es.indices.create(index=index)

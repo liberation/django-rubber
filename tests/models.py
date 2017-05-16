@@ -23,7 +23,10 @@ class Token(ESIndexableMixin, models.Model):
     name = models.CharField(default='token', max_length=200)
     number = models.IntegerField(default=42)
 
-    es_serializer = TokenSerializer
+    es_serializers = {
+        'index_1': TokenSerializer,
+        'index_2': TokenSerializer
+    }
 
     def __unicode__(self):
         return self.name
@@ -33,17 +36,7 @@ class Token(ESIndexableMixin, models.Model):
             return False
         return True
 
-    def get_es_body(self):
+    def get_es_body(self, index):
         if self.name == 'raise_exception':
             raise RuntimeError
-        return super(Token, self).get_es_body()
-
-    @classmethod
-    def get_es_doc_type_mapping(self):
-        return {
-            'properties': {
-                'name': {
-                    'type': 'text'
-                }
-            }
-        }
+        return super(Token, self).get_es_body(index)

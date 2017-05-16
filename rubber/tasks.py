@@ -37,7 +37,7 @@ def es_index_object(
             return STATUS_IGNORED
 
         doc_type = obj.get_es_doc_type()
-        body = obj.get_es_body()
+        body = obj.get_es_body(index)
         rubber_config.es.index(
             op_type='index',
             index=index,
