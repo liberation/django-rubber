@@ -2,6 +2,7 @@
 Base management command for rubber.
 """
 from __future__ import print_function
+from optparse import make_option
 import sys
 import traceback
 
@@ -14,9 +15,8 @@ from rubber import get_rubber_config
 
 class ESBaseCommand(BaseCommand):
     required_options = []
-
-    def add_arguments(self, parser):
-        parser.add_argument(
+    option_list = BaseCommand.option_list + (
+        make_option(
             '--dry-run',
             action='store_true',
             dest='dry_run',
@@ -25,14 +25,8 @@ class ESBaseCommand(BaseCommand):
                 "Run the command in dry run mode without actually changing "
                 "anything."
             )
-        )
-        parser.add_argument(
-            '--yes',
-            action='store_true',
-            dest='yes',
-            default=False,
-            help="Bypass the command line's verification."
-        )
+        ),
+    )
 
     def handle(self, *args, **options):
         self.rubber_config = get_rubber_config()

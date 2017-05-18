@@ -2,6 +2,7 @@
 Mixins for rubber.
 """
 import logging
+import inspect
 
 from django.contrib.contenttypes.models import ContentType
 
@@ -35,6 +36,8 @@ class ESIndexableMixin(object):
 
     def get_es_body(self, index):
         serializer = self.get_es_serializers().get(index)
+        if inspect.ismethod(serializer):
+            return serializer()
         return serializer(self).data
 
     def is_indexable(self):

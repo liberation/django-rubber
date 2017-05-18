@@ -1,9 +1,10 @@
 """
 Celery app for rubber tests.
 """
+from django.conf import settings
+
 from celery import Celery
 
-from django.conf import settings
 
 app = Celery('rubber')
 
