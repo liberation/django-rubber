@@ -10,6 +10,7 @@ exec(open('rubber/version.py').read())
 
 install_requires = [
     'elasticsearch',
+    'elasticsearch-dsl',
     'celery',
     'six',
     'tqdm',

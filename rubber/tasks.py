@@ -1,6 +1,7 @@
 """
 Celery tasks for rubber.
 """
+import inspect
 import logging
 
 from django.contrib.contenttypes.models import ContentType
@@ -37,14 +38,20 @@ def es_index_object(
             return STATUS_IGNORED
 
         doc_type = obj.get_es_doc_type()
-        body = obj.get_es_body(index)
-        rubber_config.es.index(
-            op_type='index',
-            index=index,
-            doc_type=doc_type,
-            id=obj.pk,
-            body=body
-        )
+
+        serializer = obj.get_es_serializers().get(index)
+        if inspect.ismethod(serializer):
+            doc = serializer()
+            doc.meta.id = obj.pk
+            doc.save(using=rubber_config.es, index=index)
+        else:
+            rubber_config.es.index(
+                op_type='index',
+                index=index,
+                doc_type=doc_type,
+                id=obj.pk,
+                body=serializer(obj).data
+            )
     except:
         if fail_silently:
             logger.error(

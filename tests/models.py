@@ -3,12 +3,25 @@ Models for rubber tests.
 """
 from django.db import models
 
+from elasticsearch_dsl import DocType
+from elasticsearch_dsl import String
+
 from rubber.mixins import ESIndexableMixin
+
+
+class TokenDocType(DocType):
+    name = String()
+    number = String()
+
+    class Meta:
+        doc_type = 'token'
 
 
 class TokenSerializer(object):
 
     def __init__(self, token, *args, **kwargs):
+        if token.name == 'raise_exception':
+            raise RuntimeError
         self.token = token
 
     @property
@@ -29,21 +42,18 @@ class Token(ESIndexableMixin, models.Model):
     def get_es_serializers(self):
         return {
             'index_1': TokenSerializer,
-            'index_2': self.serializer_as_method
+            'index_2': self.to_doc_type
         }
 
-    def serializer_as_method(self):
-        return {
-            'name': self.name,
-            'number': self.number,
-        }
+    def to_doc_type(self):
+        if self.name == 'raise_exception':
+            raise RuntimeError
+        doc = TokenDocType()
+        doc.name = self.name
+        doc.number = self.number
+        return doc
 
     def is_indexable(self):
         if self.name == 'not_indexable':
             return False
         return True
-
-    def get_es_body(self, index):
-        if self.name == 'raise_exception':
-            raise RuntimeError
-        return super(Token, self).get_es_body(index)
