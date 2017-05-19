@@ -8,6 +8,7 @@ import logging
 import six
 
 from elasticsearch import Elasticsearch
+from elasticsearch_dsl.serializer import serializer
 
 from django.conf import settings
 from django.db import transaction
@@ -92,7 +93,7 @@ class RubberConfig(AppConfig):
         super(RubberConfig, self).__init__(*args, **kwargs)
 
     def ready(self):
-        self._es = Elasticsearch(hosts=self.hosts)
+        self._es = Elasticsearch(hosts=self.hosts, serializer=serializer)
 
     @property
     def settings(self):

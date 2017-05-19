@@ -12,6 +12,7 @@ from rubber.mixins import ESIndexableMixin
 class TokenDocType(DocType):
     name = String()
     number = String()
+    multi = String(multi=True)
 
     class Meta:
         doc_type = 'token'
@@ -29,6 +30,7 @@ class TokenSerializer(object):
         return {
             'name': self.token.name,
             'number': self.token.number,
+            'multi': ['item_1', 'item_2']
         }
 
 
@@ -51,6 +53,8 @@ class Token(ESIndexableMixin, models.Model):
         doc = TokenDocType()
         doc.name = self.name
         doc.number = self.number
+        doc.multi.append('item_1')
+        doc.multi.append('item_2')
         return doc
 
     def is_indexable(self):
