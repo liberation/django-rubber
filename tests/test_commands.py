@@ -10,6 +10,12 @@ from tests.models import Token
 
 class TestCommands(BaseTestCase):
 
+    def setUp(self):
+        super(TestCommands, self).setUp()
+        self.createIndex('index_1')
+        self.createIndex('index_2')
+        self.refresh()
+
     def tearDown(self):
         super(TestCommands, self).tearDown()
         # Delete remnants of previous tests.
@@ -20,25 +26,25 @@ class TestCommands(BaseTestCase):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()
         settings.RUBBER['OPTIONS']['disabled'] = False
-        self.assertDocDoesntExist(token, 'index_1')
-        self.assertDocDoesntExist(token, 'index_2')
+        self.assertDocDoesntExist(token, 0)
+        self.assertDocDoesntExist(token, 1)
 
         # Dry run.
         call_command('es_create_documents', dry_run=True)
-        self.assertDocDoesntExist(token, 'index_1')
-        self.assertDocDoesntExist(token, 'index_2')
+        self.assertDocDoesntExist(token, 0)
+        self.assertDocDoesntExist(token, 1)
 
         call_command('es_create_documents')
-        self.assertDocExists(token, 'index_1')
-        self.assertDocExists(token, 'index_2')
+        self.assertDocExists(token, 0)
+        self.assertDocExists(token, 1)
 
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create(name='raise_exception')
         settings.RUBBER['OPTIONS']['disabled'] = False
 
         call_command('es_create_documents')
-        self.assertDocDoesntExist(token, 'index_1')
-        self.assertDocDoesntExist(token, 'index_2')
+        self.assertDocDoesntExist(token, 0)
+        self.assertDocDoesntExist(token, 1)
 
     # def test_es_create_indices(self):
     #     # Dry run.

@@ -16,6 +16,7 @@ class TokenDocType(DocType):
 
     class Meta:
         doc_type = 'token'
+        index = 'index_2'
 
 
 class TokenSerializer(object):
@@ -41,13 +42,20 @@ class Token(ESIndexableMixin, models.Model):
     def __unicode__(self):
         return self.name
 
-    def get_es_serializers(self):
-        return {
-            'index_1': TokenSerializer,
-            'index_2': self.to_doc_type
-        }
+    def get_es_indexers(self):
+        return (
+            {
+                'index': 'index_1',
+                'serializer': TokenSerializer,
+                'doc_type': 'token'
+            },
+            {
+                'dsl_doc_type': TokenDocType,
+                'dsl_doc_type_mapping': self.dsl_doc_type_mapping
+            },
+        )
 
-    def to_doc_type(self):
+    def dsl_doc_type_mapping(self):
         if self.name == 'raise_exception':
             raise RuntimeError
         doc = TokenDocType()

@@ -17,70 +17,70 @@ class ESIndexableMixin(object):
     """
     Provide the required methods and attributes to index django models.
     """
-    es_serializers = None
+    es_indexers = []
 
     @classmethod
     def get_indexable_queryset(cls):
         return cls._default_manager.all()
 
-    @classmethod
-    def get_es_doc_type(cls):
-        return cls.__name__.lower()
-
-    def get_es_serializers(self):
-        return self.es_serializers
-
-    def get_es_indices(self):
-        return self.get_es_serializers().keys()
+    def get_es_indexers(self):
+        return self.es_indexers
 
     def is_indexable(self):
         return True
 
-    def get_es_doc(self, index):
+    def get_es_doc(self, indexer_index):
         if not self.pk:
             return None
-        return rubber_config.es.get(
+        indexer = self.get_es_indexers()[indexer_index]
+        if 'dsl_doc_type' in indexer:
+            index = indexer['dsl_doc_type']._doc_type.index
+            doc_type = indexer['dsl_doc_type']._doc_type.name
+        else:
+            index = indexer['index']
+            doc_type = indexer['doc_type']
+        result = rubber_config.es.get(
             index=index,
-            doc_type=self.get_es_doc_type(),
-            id=self.pk
+            doc_type=doc_type,
+            id=self.pk,
+            ignore=404
         )
+        if 'found' not in result or result['found'] is False:
+            return None
+        return result
 
-    def es_index(self, async=True, countdown=0, indices=None, queue=None):
+    def es_index(self, async=True, countdown=0):
         if rubber_config.is_disabled or not self.is_indexable():
             return
-
-        queue = queue or rubber_config.celery_queue
         content_type = ContentType.objects.get_for_model(self)
-        indices = indices or self.get_es_indices()
-
-        for index in indices:
-            if async:
-                es_index_object.apply_async(
-                    args=(index, content_type.pk, self.pk),
-                    countdown=countdown,
-                    queue=queue
+        if async:
+            es_index_object.apply_async(
+                args=(content_type.pk, self.pk),
+                countdown=countdown,
+                queue=rubber_config.celery_queue
+            )
+        else:
+            if rubber_config.should_fail_silently:
+                es_index_object.apply(
+                    args=(content_type.pk, self.pk)
                 )
             else:
-                if rubber_config.should_fail_silently:
-                    es_index_object.apply(
-                        args=(index, content_type.pk, self.pk)
-                    )
-                else:
-                    es_index_object.run(index, content_type.pk, self.pk)
+                es_index_object.run(content_type.pk, self.pk)
 
-    def es_delete(self, async=True, indices=None, queue=None):
+    def es_delete(self, async=True):
         if rubber_config.is_disabled:
             return
-
-        doc_type = self.get_es_doc_type()
-        queue = queue or rubber_config.celery_queue
-        indices = indices or self.get_es_indices()
-
-        for index in indices:
+        for indexer in self.get_es_indexers():
+            if 'dsl_doc_type' in indexer:
+                index = indexer['dsl_doc_type']._doc_type.index
+                doc_type = indexer['dsl_doc_type']._doc_type.name
+            else:
+                index = indexer['index']
+                doc_type = indexer['doc_type']
             if async:
                 es_delete_doc.apply_async(
                     args=(index, doc_type, self.pk),
-                    queue=queue
+                    queue=rubber_config.celery_queue
                 )
             else:
                 if rubber_config.should_fail_silently:
