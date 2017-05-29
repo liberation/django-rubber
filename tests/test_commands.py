@@ -28,19 +28,19 @@ class TestCommands(BaseTestCase):
         settings.RUBBER['OPTIONS']['disabled'] = False
 
         call_command('es_create_documents', models='YOLO')
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         call_command('es_create_documents', models='tests.models.Token')
-        self.assertDocExists(token, 1)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_2')
+        self.assertDocExists(token, 'INDEX_2')
 
     def test_es_create_documents_from(self):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()
         settings.RUBBER['OPTIONS']['disabled'] = False
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         with self.assertRaises(SystemExit):
             call_command('es_create_documents', from_date='foobar')
@@ -51,25 +51,25 @@ class TestCommands(BaseTestCase):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()
         settings.RUBBER['OPTIONS']['disabled'] = False
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         # Dry run.
         call_command('es_create_documents', dry_run=True)
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         call_command('es_create_documents')
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
 
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create(name='raise_exception')
         settings.RUBBER['OPTIONS']['disabled'] = False
 
         call_command('es_create_documents')
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
     # def test_es_create_indices(self):
     #     # Dry run.

@@ -30,10 +30,10 @@ class ESIndexableMixin(object):
     def is_indexable(self):
         return True
 
-    def get_es_doc(self, indexer_index):
+    def get_es_doc(self, indexer_key):
         if not self.pk:
             return None
-        indexer = self.get_es_indexers()[indexer_index]
+        indexer = self.get_es_indexers()[indexer_key]
         if 'dsl_doc_type' in indexer:
             index = indexer['dsl_doc_type']._doc_type.index
             doc_type = indexer['dsl_doc_type']._doc_type.name
@@ -71,7 +71,7 @@ class ESIndexableMixin(object):
     def es_delete(self, async=True):
         if rubber_config.is_disabled:
             return
-        for indexer in self.get_es_indexers():
+        for key, indexer in self.get_es_indexers().iteritems():
             if 'dsl_doc_type' in indexer:
                 index = indexer['dsl_doc_type']._doc_type.index
                 doc_type = indexer['dsl_doc_type']._doc_type.name

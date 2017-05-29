@@ -69,7 +69,8 @@ class Command(ESBaseCommand):
         self.print_info(u"Models : {0}".format(indexable_models))
 
         for model in indexable_models:
-            self.print_success(u"Indexing model: '{0}'.".format(model.__name__))
+            self.print_success(
+                u"Indexing model: '{0}'.".format(model.__name__))
             queryset = model.get_indexable_queryset()
 
             if from_date is not None:

@@ -36,36 +36,36 @@ class TestMixins(BaseTestCase):
 
     def test_get_es_doc(self):
         token = Token()
-        self.assertIsNone(token.get_es_doc(0))
-        self.assertIsNone(token.get_es_doc(1))
+        self.assertIsNone(token.get_es_doc('INDEX_1'))
+        self.assertIsNone(token.get_es_doc('INDEX_2'))
         token.save()
-        self.assertIsNotNone(token.get_es_doc(0))
-        self.assertIsNotNone(token.get_es_doc(1))
+        self.assertIsNotNone(token.get_es_doc('INDEX_1'))
+        self.assertIsNotNone(token.get_es_doc('INDEX_2'))
 
     def test_es_index(self):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()
         settings.RUBBER['OPTIONS']['disabled'] = False
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         # Async
         token.es_index()
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
 
         token.es_delete()
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         # Sync
         token.es_index(async=True)
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
 
         token = Token.objects.create(name='not_indexable')
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create(name='raise_exception')
@@ -74,8 +74,8 @@ class TestMixins(BaseTestCase):
         token.es_index()
         # Sync silent fail.
         token.es_index(async=False)
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         settings.RUBBER['OPTIONS']['fail_silently'] = False
         # Async hard fail.
@@ -89,19 +89,19 @@ class TestMixins(BaseTestCase):
     def test_es_delete(self):
         # Async call.
         token = Token.objects.create(name='token')
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
         token.es_delete()
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         # Sync call.
         token = Token.objects.create(name='token')
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
         token.es_delete(async=False)
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         # Async soft fail if document doesn't exist.
         token.es_delete()
@@ -120,11 +120,11 @@ class TestMixins(BaseTestCase):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token.save()
         settings.RUBBER['OPTIONS']['disabled'] = False
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
         token.save()
-        doc = token.get_es_doc(0)
+        doc = token.get_es_doc('INDEX_1')
         self.assertEqual(doc['_source']['name'], 'token')
         self.assertEqual(doc['_id'], str(token.pk))
 
@@ -132,30 +132,30 @@ class TestMixins(BaseTestCase):
         token.name = 'kento'
         token.save()
         self.refresh()
-        doc = token.get_es_doc(0)
+        doc = token.get_es_doc('INDEX_1')
         self.assertEqual(doc['_source']['name'], 'kento')
 
         # Instance is not indexable.
         token = Token.objects.create(name='not_indexable')
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')
 
     def test_delete(self):
         token = Token.objects.create(name='token')
         token_id = token.pk
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
 
         settings.RUBBER['OPTIONS']['disabled'] = True
         token.delete()
         settings.RUBBER['OPTIONS']['disabled'] = False
         token.id = token_id
-        self.assertDocExists(token, 0)
-        self.assertDocExists(token, 1)
+        self.assertDocExists(token, 'INDEX_1')
+        self.assertDocExists(token, 'INDEX_2')
 
         token.save()
         token_id = token.pk
         token.delete()
         token.id = token_id
-        self.assertDocDoesntExist(token, 0)
-        self.assertDocDoesntExist(token, 1)
+        self.assertDocDoesntExist(token, 'INDEX_1')
+        self.assertDocDoesntExist(token, 'INDEX_2')

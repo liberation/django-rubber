@@ -31,7 +31,7 @@ def es_index_object(content_type_id, object_id, fail_silently=None):
         obj = content_type.model_class()._default_manager.get(pk=object_id)
         if not obj.is_indexable():
             return STATUS_IGNORED
-        for indexer in obj.get_es_indexers():
+        for key, indexer in obj.get_es_indexers().iteritems():
             if 'dsl_doc_type' in indexer:
                 doc = indexer['dsl_doc_type_mapping']()
                 doc.meta.id = obj.pk

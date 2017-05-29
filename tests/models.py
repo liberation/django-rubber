@@ -44,17 +44,17 @@ class Token(ESIndexableMixin, models.Model):
         return self.name
 
     def get_es_indexers(self):
-        return (
-            {
+        return {
+            'INDEX_1': {
                 'index': 'index_1',
                 'serializer': TokenSerializer,
                 'doc_type': 'token'
             },
-            {
+            'INDEX_2': {
                 'dsl_doc_type': TokenDocType,
                 'dsl_doc_type_mapping': self.dsl_doc_type_mapping
             },
-        )
+        }
 
     def dsl_doc_type_mapping(self):
         if self.name == 'raise_exception':
