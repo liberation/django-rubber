@@ -22,20 +22,40 @@ class Command(ESBaseCommand):
                 "Must be formatted as YYYY-MM-DDTHH:MM:SS."
             )
         ),
+        make_option(
+            '--models',
+            action='store',
+            type='string',
+            dest='models',
+            help=(
+                "Comma separated list of models to be indexed. It must match "
+                "at least one of the models defined in RUBBER settings."
+            )
+        ),
     )
 
+    def get_models_paths(self):
+        if not self.models:
+            return self.rubber_config.models_paths
+        models_paths = [
+            model_path for model_path in self.rubber_config.models_paths
+            if model_path in self.models.split(',')
+        ]
+        return models_paths
+
     def get_from_date(self):
-        if self.from_date:
-            try:
-                from_date = datetime.strptime(
-                    self.from_date,
-                    '%Y-%m-%dT%H:%M:%S'
-                )
-            except Exception as exc:
-                self.print_error(exc)
-                sys.exit(1)
-            else:
-                return from_date
+        if not self.from_date:
+            return None
+        try:
+            from_date = datetime.strptime(
+                self.from_date,
+                '%Y-%m-%dT%H:%M:%S'
+            )
+        except Exception as exc:
+            self.print_error(exc)
+            sys.exit(1)
+        else:
+            return from_date
         return None
 
     def run(self, *args, **options):
@@ -43,8 +63,13 @@ class Command(ESBaseCommand):
         if from_date is not None:
             self.print_info(u"Reference date : {0}".format(from_date))
 
-        for model in self.rubber_config.indexable_models:
-            self.print_info(u"Indexing model: '{0}'.".format(model.__name__))
+        models_paths = self.get_models_paths()
+        indexable_models = self.rubber_config.get_models_from_paths(
+            models_paths)
+        self.print_info(u"Models : {0}".format(indexable_models))
+
+        for model in indexable_models:
+            self.print_success(u"Indexing model: '{0}'.".format(model.__name__))
             queryset = model.get_indexable_queryset()
 
             if from_date is not None:
@@ -58,4 +83,4 @@ class Command(ESBaseCommand):
                     try:
                         obj.es_index(async=False)
                     except Exception as exc:
-                        print exc
+                        self.print_error(exc)

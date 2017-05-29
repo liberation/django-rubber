@@ -105,16 +105,19 @@ class RubberConfig(AppConfig):
     def es(self):
         return self._es
 
-    @property
-    def indexable_models(self):
+    def get_models_from_paths(self, models_paths):
         models = []
-        for model_path in self.models_paths:
+        for model_path in models_paths:
             module_path, model_name = model_path.rsplit('.', 1)
             module = __import__(module_path, fromlist=[''])
             model = getattr(module, model_name)
             if model not in models:
                 models.append(model)
         return models
+
+    @property
+    def indexable_models(self):
+        return self.get_models_from_paths(self.models_paths)
 
     @property
     def hosts(self):
