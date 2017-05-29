@@ -3,11 +3,26 @@ Management command for rubber.
 """
 from datetime import datetime
 from optparse import make_option
+import gc
 import sys
 
 from tqdm import tqdm
 
 from rubber.management.base import ESBaseCommand
+
+
+def queryset_iterator(queryset, chunksize=1000):
+    # https://code.djangoproject.com/ticket/15807
+    # 'pk' alias doesn't work with inherited models when parent has an
+    # ordering set
+    id = 0
+    last_id = queryset.order_by('-id')[0].id
+    queryset = queryset.order_by('id')
+    while id < last_id:
+        for row in queryset.filter(id__gt=id)[:chunksize]:
+            id = row.id
+            yield row
+        gc.collect()
 
 
 class Command(ESBaseCommand):
@@ -79,7 +94,9 @@ class Command(ESBaseCommand):
                 filter_dict[filter_name] = from_date
                 queryset = queryset.filter(**filter_dict)
 
-            for obj in tqdm(queryset):
+            queryset_iterable = queryset_iterator(queryset)
+
+            for obj in tqdm(queryset_iterable):
                 if not self.dry_run:
                     try:
                         obj.es_index(async=False)
