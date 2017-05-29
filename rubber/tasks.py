@@ -31,22 +31,8 @@ def es_index_object(content_type_id, object_id, fail_silently=None):
         obj = content_type.model_class()._default_manager.get(pk=object_id)
         if not obj.is_indexable():
             return STATUS_IGNORED
-        for key, indexer in obj.get_es_indexers().iteritems():
-            if 'dsl_doc_type' in indexer:
-                doc = indexer['dsl_doc_type_mapping']()
-                doc.meta.id = obj.pk
-                doc.save(using=rubber_config.es)
-            else:
-                index = indexer['index']
-                doc_type = indexer['doc_type']
-                body = indexer['serializer'](obj).data
-                rubber_config.es.index(
-                    op_type='index',
-                    index=index,
-                    doc_type=doc_type,
-                    id=obj.pk,
-                    body=body
-                )
+        body = obj.get_es_index_requests_raw()
+        rubber_config.es.bulk(body=body)
     except:
         if fail_silently:
             logger.error(

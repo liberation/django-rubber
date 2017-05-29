@@ -5,6 +5,8 @@ import logging
 
 from django.contrib.contenttypes.models import ContentType
 
+from elasticsearch_dsl.serializer import serializer as dsl_serializer
+
 from rubber import get_rubber_config
 from rubber.tasks import es_delete_doc
 from rubber.tasks import es_index_object
@@ -17,7 +19,7 @@ class ESIndexableMixin(object):
     """
     Provide the required methods and attributes to index django models.
     """
-    es_indexers = []
+    es_indexers = {}
     es_reference_date = 'modified_at'
 
     @classmethod
@@ -49,6 +51,39 @@ class ESIndexableMixin(object):
         if 'found' not in result or result['found'] is False:
             return None
         return result
+
+    def get_es_index_requests(self):
+        requests = []
+        for _, indexer in self.get_es_indexers().iteritems():
+            if 'dsl_doc_type' in indexer:
+                doc = indexer['dsl_doc_type_mapping']()
+                requests.append({
+                    'index': {
+                        '_index': doc._doc_type.index,
+                        '_type': doc._doc_type.name,
+                        '_id': self.pk
+                    }
+                })
+                requests.append(doc)
+            else:
+                index = indexer['index']
+                doc_type = indexer['doc_type']
+                body = indexer['serializer'](self).data
+                requests.append({
+                    'index': {
+                        '_index': index,
+                        '_type': doc_type,
+                        '_id': self.pk
+                    }
+                })
+                requests.append(body)
+        return requests
+
+    def get_es_index_requests_raw(self):
+        return u"\n".join([
+            dsl_serializer.dumps(request)
+            for request in self.get_es_index_requests()
+        ])
 
     def es_index(self, async=True, countdown=0):
         if rubber_config.is_disabled or not self.is_indexable():

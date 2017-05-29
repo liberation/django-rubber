@@ -3,30 +3,13 @@ Management command for rubber.
 """
 from datetime import datetime
 from optparse import make_option
-import gc
 import sys
+
+from django.core.paginator import Paginator
 
 from tqdm import tqdm
 
 from rubber.management.base import ESBaseCommand
-
-
-def queryset_iterator(queryset, chunksize=1000):
-    # https://code.djangoproject.com/ticket/15807
-    # 'pk' alias doesn't work with inherited models when parent has an
-    # ordering set
-    id = 0
-    try:
-        last_id = queryset.order_by('-id')[0].id
-    except IndexError:
-        yield []
-    else:
-        queryset = queryset.order_by('id')
-        while id < last_id:
-            for row in queryset.filter(id__gt=id)[:chunksize]:
-                id = row.id
-                yield row
-            gc.collect()
 
 
 class Command(ESBaseCommand):
@@ -98,11 +81,19 @@ class Command(ESBaseCommand):
                 filter_dict[filter_name] = from_date
                 queryset = queryset.filter(**filter_dict)
 
-            queryset_iterable = queryset_iterator(queryset)
-
-            for obj in tqdm(queryset_iterable):
-                if not self.dry_run:
+            max_bulk_size = 5000
+            paginator = Paginator(queryset, max_bulk_size)
+            with tqdm(total=paginator.count) as pbar:
+                for page_number in paginator.page_range:
+                    page = paginator.page(page_number)
                     try:
-                        obj.es_index(async=False)
+                        body = u"\n".join([
+                            obj.get_es_index_requests_raw()
+                            for obj in page.object_list
+                        ])
+                        if not self.dry_run:
+                            self.rubber_config.es.bulk(body=body)
                     except Exception as exc:
                         self.print_error(exc)
+                    else:
+                        pbar.update(len(page.object_list))

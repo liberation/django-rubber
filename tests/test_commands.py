@@ -22,6 +22,15 @@ class TestCommands(BaseTestCase):
         self.deleteIndex('index_1')
         self.deleteIndex('index_2')
 
+    # def test_plop(self):
+    #     settings.RUBBER['OPTIONS']['disabled'] = True
+    #     token = Token.objects.create()
+    #     settings.RUBBER['OPTIONS']['disabled'] = False
+    #
+    #     print "##########"
+    #     print token.get_es_bulk_index_raw()
+    #     print "##########"
+
     def test_es_create_documents_models(self):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()
