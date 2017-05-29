@@ -16,13 +16,17 @@ def queryset_iterator(queryset, chunksize=1000):
     # 'pk' alias doesn't work with inherited models when parent has an
     # ordering set
     id = 0
-    last_id = queryset.order_by('-id')[0].id
-    queryset = queryset.order_by('id')
-    while id < last_id:
-        for row in queryset.filter(id__gt=id)[:chunksize]:
-            id = row.id
-            yield row
-        gc.collect()
+    try:
+        last_id = queryset.order_by('-id')[0].id
+    except IndexError:
+        yield []
+    else:
+        queryset = queryset.order_by('id')
+        while id < last_id:
+            for row in queryset.filter(id__gt=id)[:chunksize]:
+                id = row.id
+                yield row
+            gc.collect()
 
 
 class Command(ESBaseCommand):
@@ -88,7 +92,7 @@ class Command(ESBaseCommand):
                 u"Indexing model: '{0}'.".format(model.__name__))
             queryset = model.get_indexable_queryset()
 
-            if from_date is not None:
+            if from_date is not None and model.es_reference_date is not None:
                 filter_dict = {}
                 filter_name = '{0}__gt'.format(model.es_reference_date)
                 filter_dict[filter_name] = from_date
