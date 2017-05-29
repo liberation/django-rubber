@@ -22,6 +22,18 @@ class TestCommands(BaseTestCase):
         self.deleteIndex('index_1')
         self.deleteIndex('index_2')
 
+    def test_es_create_documents_from(self):
+        settings.RUBBER['OPTIONS']['disabled'] = True
+        token = Token.objects.create()
+        settings.RUBBER['OPTIONS']['disabled'] = False
+        self.assertDocDoesntExist(token, 0)
+        self.assertDocDoesntExist(token, 1)
+
+        with self.assertRaises(SystemExit):
+            call_command('es_create_documents', from_date='foobar')
+
+        call_command('es_create_documents', from_date='2008-09-03T20:56:35')
+
     def test_es_create_documents(self):
         settings.RUBBER['OPTIONS']['disabled'] = True
         token = Token.objects.create()

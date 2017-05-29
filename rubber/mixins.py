@@ -18,6 +18,7 @@ class ESIndexableMixin(object):
     Provide the required methods and attributes to index django models.
     """
     es_indexers = []
+    es_reference_date = 'modified_at'
 
     @classmethod
     def get_indexable_queryset(cls):

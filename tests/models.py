@@ -36,6 +36,7 @@ class TokenSerializer(object):
 
 
 class Token(ESIndexableMixin, models.Model):
+    modified_at = models.DateTimeField(auto_now=True)
     name = models.CharField(default='token', max_length=200)
     number = models.IntegerField(default=42)
 
