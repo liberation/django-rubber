@@ -88,7 +88,7 @@ class Command(ESBaseCommand):
                     page = paginator.page(page_number)
                     try:
                         body = u"\n".join([
-                            obj.get_es_index_requests_raw()
+                            obj.get_es_index_body()
                             for obj in page.object_list
                         ])
                         if not self.dry_run:
