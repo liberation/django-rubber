@@ -81,7 +81,7 @@ class Command(ESBaseCommand):
                 filter_dict[filter_name] = from_date
                 queryset = queryset.filter(**filter_dict)
 
-            max_bulk_size = 5000
+            max_bulk_size = 1000
             paginator = Paginator(queryset, max_bulk_size)
             with tqdm(total=paginator.count) as pbar:
                 for page_number in paginator.page_range:
