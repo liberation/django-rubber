@@ -46,6 +46,7 @@ class Token(ESIndexableMixin, models.Model):
     def get_es_indexers(self):
         return {
             'INDEX_1': {
+                'version': 1,
                 'index': 'index_1',
                 'serializer': TokenSerializer,
                 'doc_type': 'token'

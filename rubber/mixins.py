@@ -30,16 +30,23 @@ class ESIndexableMixin(object):
     def is_indexable(self):
         return True
 
+    def get_es_indexer_meta(self, indexer):
+        if 'dsl_doc_type' in indexer:
+            version = 1
+            index = indexer['dsl_doc_type']._doc_type.index
+            doc_type = indexer['dsl_doc_type']._doc_type.name
+        else:
+            version = indexer['version']
+            index = indexer['index']
+            doc_type = indexer['doc_type']
+        index = '{0}_v{1}'.format(index, version)
+        return (index, doc_type, version)
+
     def get_es_doc(self, indexer_key):
         if not self.pk:
             return None
         indexer = self.get_es_indexers()[indexer_key]
-        if 'dsl_doc_type' in indexer:
-            index = indexer['dsl_doc_type']._doc_type.index
-            doc_type = indexer['dsl_doc_type']._doc_type.name
-        else:
-            index = indexer['index']
-            doc_type = indexer['doc_type']
+        index, doc_type, version = self.get_es_indexer_meta(indexer)
         result = rubber_config.es.get(
             index=index,
             doc_type=doc_type,
@@ -53,27 +60,19 @@ class ESIndexableMixin(object):
     def get_es_index_body(self):
         requests = []
         for _, indexer in self.get_es_indexers().iteritems():
+            index, doc_type, version = self.get_es_indexer_meta(indexer)
+            requests.append({
+                'index': {
+                    '_index': index,
+                    '_type': doc_type,
+                    '_id': self.pk
+                }
+            })
             if 'dsl_doc_type' in indexer:
                 doc = indexer['dsl_doc_type_mapping']()
-                requests.append({
-                    'index': {
-                        '_index': doc._doc_type.index,
-                        '_type': doc._doc_type.name,
-                        '_id': self.pk
-                    }
-                })
                 requests.append(doc)
             else:
-                index = indexer['index']
-                doc_type = indexer['doc_type']
                 body = indexer['serializer'](self).data
-                requests.append({
-                    'index': {
-                        '_index': index,
-                        '_type': doc_type,
-                        '_id': self.pk
-                    }
-                })
                 requests.append(body)
         return u"\n".join([
             dsl_serializer.dumps(request) for request in requests
@@ -82,12 +81,7 @@ class ESIndexableMixin(object):
     def get_es_delete_body(self):
         requests = []
         for _, indexer in self.get_es_indexers().iteritems():
-            if 'dsl_doc_type' in indexer:
-                index = indexer['dsl_doc_type']._doc_type.index
-                doc_type = indexer['dsl_doc_type']._doc_type.name
-            else:
-                index = indexer['index']
-                doc_type = indexer['doc_type']
+            index, doc_type, version = self.get_es_indexer_meta(indexer)
             requests.append({
                 'delete': {
                     '_index': index,
