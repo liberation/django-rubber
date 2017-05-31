@@ -52,6 +52,7 @@ class Token(ESIndexableMixin, models.Model):
                 'doc_type': 'token'
             },
             'INDEX_2': {
+                'version': 1,
                 'dsl_doc_type': TokenDocType,
                 'dsl_doc_type_mapping': self.dsl_doc_type_mapping
             },

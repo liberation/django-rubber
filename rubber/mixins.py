@@ -31,12 +31,11 @@ class ESIndexableMixin(object):
         return True
 
     def get_es_indexer_meta(self, indexer):
+        version = indexer.get('version', 1)
         if 'dsl_doc_type' in indexer:
-            version = 1
             index = indexer['dsl_doc_type']._doc_type.index
             doc_type = indexer['dsl_doc_type']._doc_type.name
         else:
-            version = indexer['version']
             index = indexer['index']
             doc_type = indexer['doc_type']
         index = '{0}_v{1}'.format(index, version)
