@@ -13,14 +13,14 @@ class TestCommands(BaseTestCase):
     def setUp(self):
         super(TestCommands, self).setUp()
         self.createIndex('index_1_v1')
-        self.createIndex('index_2_v1')
+        self.createIndex('index_2')
         self.refresh()
 
     def tearDown(self):
         super(TestCommands, self).tearDown()
         # Delete remnants of previous tests.
         self.deleteIndex('index_1_v1')
-        self.deleteIndex('index_2_v1')
+        self.deleteIndex('index_2')
 
     def test_es_create_documents_models(self):
         settings.RUBBER['OPTIONS']['disabled'] = True
