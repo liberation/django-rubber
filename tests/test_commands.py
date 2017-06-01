@@ -20,11 +20,10 @@ class TestCreateIndex(BaseTestCase):
         with self.assertRaises(SystemExit):
             call_command('es_create_index')
 
-        # File does not exist.
-        with self.assertRaises(SystemExit):
-            call_command('es_create_index', index='index_1_v404')
+        # Fail silently if file doesn't exist.
+        call_command('es_create_index', 'index_1_v404')
 
-        call_command('es_create_index', index='index_1_v1')
+        call_command('es_create_index', 'index_1_v1')
 
 
 class TestCreateDocuments(BaseTestCase):
