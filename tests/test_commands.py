@@ -8,19 +8,38 @@ from tests.base import BaseTestCase
 from tests.models import Token
 
 
-class TestCommands(BaseTestCase):
+class TestCreateIndex(BaseTestCase):
+
+    def tearDown(self):
+        super(TestCreateIndex, self).tearDown()
+        # Delete remnants of previous tests.
+        self.deleteIndex('index_1_v1')
+
+    def test_create_index(self):
+        # Index name is required.
+        with self.assertRaises(SystemExit):
+            call_command('es_create_index')
+
+        # File does not exist.
+        with self.assertRaises(SystemExit):
+            call_command('es_create_index', index='index_1_v404')
+
+        call_command('es_create_index', index='index_1_v1')
+
+
+class TestCreateDocuments(BaseTestCase):
 
     def setUp(self):
-        super(TestCommands, self).setUp()
+        super(TestCreateDocuments, self).setUp()
         self.createIndex('index_1_v1')
-        self.createIndex('index_2')
+        self.createIndex('index_2_v1')
         self.refresh()
 
     def tearDown(self):
-        super(TestCommands, self).tearDown()
+        super(TestCreateDocuments, self).tearDown()
         # Delete remnants of previous tests.
         self.deleteIndex('index_1_v1')
-        self.deleteIndex('index_2')
+        self.deleteIndex('index_2_v1')
 
     def test_es_create_documents_models(self):
         settings.RUBBER['OPTIONS']['disabled'] = True

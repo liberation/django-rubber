@@ -1,6 +1,9 @@
 """
 Test settings for rubber.
 """
+import os
+
+SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
 
 DEBUG = True
 
@@ -46,6 +49,7 @@ RUBBER = {
     'MODELS': [
         'tests.models.Token',
     ],
+    'CONFIG_ROOT': os.path.join(SITE_ROOT, 'es_configs'),
     'OPTIONS': {
         'disabled': False,
         'fail_silently': True,

@@ -17,13 +17,13 @@ class TestMixins(BaseTestCase):
     def setUp(self):
         super(TestMixins, self).setUp()
         self.createIndex('index_1_v1')
-        self.createIndex('index_2')
+        self.createIndex('index_2_v1')
         self.refresh()
 
     def tearDown(self):
         super(TestMixins, self).tearDown()
         self.deleteIndex('index_1_v1')
-        self.deleteIndex('index_2')
+        self.deleteIndex('index_2_v1')
 
     def test_is_indexable(self):
         self.assertTrue(ESIndexableMixin().is_indexable())

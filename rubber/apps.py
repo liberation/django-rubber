@@ -24,10 +24,9 @@ except ImportError:
 
 
 DEFAULT_RUBBER = {
-    'HOSTS': [
-        {'host': 'localhost'},
-    ],
+    'HOSTS': ['localhost:9200'],
     'MODELS': [],
+    'CONFIG_ROOT': None,
     'OPTIONS': {
         'fail_silently': True,
         'disabled': False,
@@ -137,6 +136,10 @@ class RubberConfig(AppConfig):
     @property
     def celery_queue(self):
         return self.settings['OPTIONS']['celery_queue']
+
+    @property
+    def config_root(self):
+        return self.settings['CONFIG_ROOT']
 
 try:
     # Try to import AppConfig to check if this feature is available.
