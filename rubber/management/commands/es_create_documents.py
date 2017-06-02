@@ -83,18 +83,17 @@ class Command(ESBaseCommand):
                 queryset = queryset.filter(**filter_dict)
 
             max_bulk_size = 100
-            max_workers = 4
             paginator = Paginator(queryset, max_bulk_size)
+
             for page_number in paginator.page_range:
                 page = paginator.page(page_number)
                 pbar = tqdm(total=paginator.count)
 
-                executor = futures.ThreadPoolExecutor(max_workers=max_workers)
-                requests = executor.map(
-                    lambda obj: obj.get_es_index_body(),
-                    page.object_list
-                )
-                executor.shutdown()
+                with futures.ThreadPoolExecutor(max_workers=4) as executor:
+                    requests = executor.map(
+                        lambda obj: obj.get_es_index_body(),
+                        page.object_list
+                    )
 
                 try:
                     body = u"\n".join(requests)
