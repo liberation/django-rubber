@@ -84,23 +84,20 @@ class Command(ESBaseCommand):
 
             max_bulk_size = 100
             paginator = Paginator(queryset, max_bulk_size)
-
+            pbar = tqdm(total=paginator.count)
             for page_number in paginator.page_range:
                 page = paginator.page(page_number)
-                pbar = tqdm(total=paginator.count)
-
-                with futures.ThreadPoolExecutor(max_workers=4) as executor:
-                    requests = executor.map(
-                        lambda obj: obj.get_es_index_body(),
-                        page.object_list
-                    )
-
+                executor = futures.ThreadPoolExecutor(max_workers=4)
+                requests = executor.map(
+                    lambda obj: obj.get_es_index_body(),
+                    page.object_list
+                )
+                requests = list(requests)
                 try:
                     body = u"\n".join(requests)
                     if not self.dry_run:
                         self.rubber_config.es.bulk(body=body)
                 except Exception as exc:
                     self.print_error(exc)
-
                 pbar.update(len(page.object_list))
-                pbar.close()
+            pbar.close()
