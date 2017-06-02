@@ -3,6 +3,7 @@ Management command for rubber.
 """
 from datetime import datetime
 from optparse import make_option
+import concurrent.futures as futures
 import sys
 
 from django.core.paginator import Paginator
@@ -82,18 +83,25 @@ class Command(ESBaseCommand):
                 queryset = queryset.filter(**filter_dict)
 
             max_bulk_size = 100
+            max_workers = 4
             paginator = Paginator(queryset, max_bulk_size)
-            with tqdm(total=paginator.count) as pbar:
-                for page_number in paginator.page_range:
-                    page = paginator.page(page_number)
-                    try:
-                        body = u"\n".join([
-                            obj.get_es_index_body()
-                            for obj in page.object_list
-                        ])
-                        if not self.dry_run:
-                            self.rubber_config.es.bulk(body=body)
-                    except Exception as exc:
-                        self.print_error(exc)
-                    else:
-                        pbar.update(len(page.object_list))
+            for page_number in paginator.page_range:
+                page = paginator.page(page_number)
+                pbar = tqdm(total=paginator.count)
+
+                executor = futures.ThreadPoolExecutor(max_workers=max_workers)
+                requests = executor.map(
+                    lambda obj: obj.get_es_index_body(),
+                    page.object_list
+                )
+                executor.shutdown()
+
+                try:
+                    body = u"\n".join(requests)
+                    if not self.dry_run:
+                        self.rubber_config.es.bulk(body=body)
+                except Exception as exc:
+                    self.print_error(exc)
+
+                pbar.update(len(page.object_list))
+                pbar.close()

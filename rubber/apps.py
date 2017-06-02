@@ -26,7 +26,7 @@ except ImportError:
 DEFAULT_RUBBER = {
     'HOSTS': ['localhost:9200'],
     'MODELS': [],
-    'CONFIG_ROOT': None,
+    'CONFIG_ROOT': 'es_configs',
     'OPTIONS': {
         'fail_silently': True,
         'disabled': False,
