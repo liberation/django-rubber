@@ -85,10 +85,6 @@ class TestCreateDocuments(BaseTestCase):
         token = Token.objects.create(name='raise_exception')
         settings.RUBBER['OPTIONS']['disabled'] = False
 
-        call_command('es_create_documents')
-        self.assertDocDoesntExist(token, 'INDEX_1')
-        self.assertDocDoesntExist(token, 'INDEX_2')
-
     # def test_es_create_indices(self):
     #     # Dry run.
     #     call_command('es_create_indices', dry_run=True)
