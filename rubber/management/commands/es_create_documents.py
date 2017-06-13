@@ -16,6 +16,13 @@ from rubber.management.base import ESBaseCommand
 class Command(ESBaseCommand):
     option_list = ESBaseCommand.option_list + (
         make_option(
+            '--show-tqdm',
+            action='store_true',
+            dest='show_tqdm',
+            default=False,
+            help="Show tqdm progress bar."
+        ),
+        make_option(
             '--from',
             action='store',
             type='string',
@@ -84,7 +91,10 @@ class Command(ESBaseCommand):
 
             max_bulk_size = 200
             paginator = Paginator(queryset, max_bulk_size)
-            pbar = tqdm(total=paginator.count)
+            if self.show_tqdm:
+                pbar = tqdm(total=paginator.count)
+            else:
+                total = 0
             executor = futures.ThreadPoolExecutor(max_workers=8)
             for page_number in paginator.page_range:
                 page = paginator.page(page_number)
@@ -95,12 +105,17 @@ class Command(ESBaseCommand):
                 requests = []
                 for task in futures.as_completed(tasks):
                     requests.append(task.result())
-                    pbar.update(1)
+                    if self.show_tqdm:
+                        pbar.update(1)
                 try:
                     body = u"\n".join(requests)
                     if not self.dry_run:
                         self.rubber_config.es.bulk(body=body)
                 except Exception as exc:
                     self.print_error(exc)
+                if not self.show_tqdm:
+                    total += len(page.object_list)
+                    self.print_info(total)
             executor.shutdown()
-            pbar.close()
+            if self.show_tqdm:
+                pbar.close()
