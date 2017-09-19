@@ -6,6 +6,8 @@ Rubber provides you with tools to easily setup, manage and index your Django mod
 
 It is designed to allow simultaneous indexing of an object on different indices.
 
+This project is a mutation of [django-trampoline](https://github.com/liberation/django-trampoline).
+
 ## Settings
 
 Add `rubber` to your `INSTALLED_APPS`.
