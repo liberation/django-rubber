@@ -122,7 +122,7 @@ Reference date used by the command `es_create_documents --from` option. Defaults
 
 ## Mapping
 
-## Management commands
+## Management commands
 
 All management commands accept the following arguments:
 - **--help**: Display an help message and the available arguments for the command.
