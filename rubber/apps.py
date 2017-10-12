@@ -48,18 +48,18 @@ def recursive_update(d, u):
 def post_save_es_index(sender, instance, **kwargs):
     if instance.is_indexable():
         try:
-            # post_save fires after the save occurs but before the transaction
-            # is commited.
-            transaction.on_commit(lambda: instance.es_index())
-        except AttributeError:
-            # 1s countdown waiting for the transaction to complete.
-            try:
+            if hasattr(transaction, 'on_commit'):
+                # post_save fires after the save occurs but before the
+                # transaction is commited.
+                transaction.on_commit(lambda: instance.es_index())
+            else:
+                # 1s countdown waiting for the transaction to complete.
                 instance.es_index(countdown=1)
-            except AttributeError:
-                logger.error(
-                    "Sender instance doesn't define es_index.",
-                    exc_info=True
-                )
+        except AttributeError:
+            logger.error(
+                "Sender instance needs to define es_index.",
+                exc_info=True
+            )
 
 
 def post_delete_es_delete(sender, instance, **kwargs):
