@@ -98,6 +98,8 @@ class Command(ESBaseCommand):
             executor = futures.ThreadPoolExecutor(max_workers=8)
             for page_number in paginator.page_range:
                 page = paginator.page(page_number)
+                if len(page.object_list) == 0:
+                    continue
                 tasks = [
                     executor.submit(lambda obj: obj.get_es_index_body(), obj)
                     for obj in page.object_list
