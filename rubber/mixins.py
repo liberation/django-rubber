@@ -3,6 +3,7 @@ Mixins for rubber.
 """
 import logging
 import json
+import time
 
 from django.contrib.contenttypes.models import ContentType
 
@@ -15,6 +16,7 @@ from rubber.tasks import es_index_object
 logger = logging.getLogger(__name__)
 rubber_config = get_rubber_config()
 
+current_milli_time = lambda: int(round(time.time() * 1000))
 
 class ESIndexableMixin(object):
     """
@@ -76,6 +78,7 @@ class ESIndexableMixin(object):
                 requests.append(doc)
             else:
                 body = indexer['serializer'](self).data
+                body.update({'@timestamp':current_milli_time()})
                 requests.append(body)
         return u"\n".join([
             dsl_serializer.dumps(request) for request in requests
