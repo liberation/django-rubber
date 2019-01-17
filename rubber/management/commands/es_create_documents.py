@@ -42,6 +42,16 @@ class Command(ESBaseCommand):
                 "at least one of the models defined in RUBBER settings."
             )
         ),
+         make_option(
+            '--bulk-size',
+            action='store',
+            type='int',
+            dest='max_bulk_size',
+            default=200,
+            help=(
+                "Max value of bulk size (default 200)"
+            )
+        ),
     )
 
     def get_models_paths(self):
@@ -89,8 +99,7 @@ class Command(ESBaseCommand):
                 filter_dict[filter_name] = from_date
                 queryset = queryset.filter(**filter_dict)
 
-            max_bulk_size = 200
-            paginator = Paginator(queryset, max_bulk_size)
+            paginator = Paginator(queryset, self.max_bulk_size)
             if self.show_tqdm:
                 pbar = tqdm(total=paginator.count)
             else:
