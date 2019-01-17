@@ -95,7 +95,7 @@ class Command(ESBaseCommand):
                 pbar = tqdm(total=paginator.count)
             else:
                 total = 0
-            executor = futures.ThreadPoolExecutor()
+            executor = futures.ThreadPoolExecutor(max_workers=None)
             for page_number in paginator.page_range:
                 page = paginator.page(page_number)
                 if len(page.object_list) == 0:
