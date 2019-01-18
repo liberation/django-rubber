@@ -146,4 +146,5 @@ Arguments:
 - **--from** *(optional)*: Filter queryset by date. Must be formatted as YYYY-MM-DDTHH:MM:SS.
 - **--show-tqdm** *(optional)*: Show the tqdm progress bar.
 - **--dry-run** *(optional)*: Run the command in dry run mode without actually commiting anything.
+- **--bulk-size** *(optional)*: Max value of bulk size (default 200)
 
